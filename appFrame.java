@@ -85,9 +85,7 @@ public class appFrame extends JFrame{
 
         add(northPanel, BorderLayout.NORTH);
         add(drawingPanel, BorderLayout.CENTER);
-
-       
-
+        
         //setSize(800, 600);
         pack(); // Automatically size the frame to fit its contents
         setLocationRelativeTo(null); // Center the frame on the screen
