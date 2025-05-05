@@ -1,0 +1,10 @@
+*.class
+*.jar
+*.log
+*.png
+autosave.png
+manual_save.png
+.idea/
+.vscode/
+bin/
+out/
