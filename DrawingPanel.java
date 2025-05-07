@@ -3,6 +3,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Scanner;
+
 import javax.imageio.ImageIO;
 
 public class DrawingPanel extends JPanel {
@@ -12,6 +14,7 @@ public class DrawingPanel extends JPanel {
     private Color currentColor = Color.BLACK;
     private final int MIN_WIDTH = 800;
     private final int MIN_HEIGHT = 600;
+    private int saveCounter = 1;
 
     public DrawingPanel() {
         setBackground(Color.WHITE);
@@ -99,31 +102,64 @@ public class DrawingPanel extends JPanel {
     public void saveDrawing() {
         synchronized (lock) {
             try {
-                ImageIO.write(canvas, "png", new File("saved/manual_save.png"));
+                String fileName = "manual_save" + saveCounter;;
+                ImageIO.write(canvas, "png", new File(fileName));
                 System.out.println("Drawing saved.");
+                saveCounter++;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    // public void loadDrawing() {
+    //     synchronized (lock) {
+    //         try {
+    //             try (Scanner filename = new Scanner(System.in)) {
+    //                 System.out.print("Enter the filename to load: ");
+
+    //                 BufferedImage loaded = ImageIO.read(new File("saved/" + filename.nextLine()));
+    //             if (loaded != null) {
+    //                 canvas = loaded;
+    //                 g2 = canvas.createGraphics();
+    //                 g2.setColor(currentColor);
+    //                 g2.setStroke(new BasicStroke(2));
+    //                 repaint();
+    //                 System.out.println("Drawing loaded.");
+    //                 }
+    //             }
+    //         } catch (IOException e) {
+    //             e.printStackTrace();
+    //         }
+    //     }
+    // }
     public void loadDrawing() {
         synchronized (lock) {
-            try {
-                BufferedImage loaded = ImageIO.read(new File("manual_save.png"));
-                if (loaded != null) {
-                    canvas = loaded;
-                    g2 = canvas.createGraphics();
-                    g2.setColor(currentColor);
-                    g2.setStroke(new BasicStroke(2));
-                    repaint();
-                    System.out.println("Drawing loaded.");
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Choose a drawing to load");
+    
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                try {
+                    BufferedImage loaded = ImageIO.read(file);
+                    if (loaded != null) {
+                        canvas = loaded;
+                        g2 = canvas.createGraphics();
+                        g2.setColor(currentColor);
+                        g2.setStroke(new BasicStroke(2));
+                        repaint();
+                        System.out.println("Drawing loaded.");
+                    } else {
+                        System.out.println("Failed to load image.");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Load button pressed");
             }
         }
-    }
+    }    
 
     public void clearCanvas() {
         synchronized (lock) {
