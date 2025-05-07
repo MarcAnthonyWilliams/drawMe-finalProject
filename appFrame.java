@@ -1,4 +1,8 @@
+
 import javax.swing.*;
+
+import components.RoundedButton;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 // import java.awt.event.ActionEvent;
@@ -18,13 +22,21 @@ public class appFrame extends JFrame{
         drawingPanel = new DrawingPanel();
 
         JLabel title = new JLabel("Welcome to DrawMe!", SwingConstants.CENTER);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setFont(new Font("SansSerif", Font.BOLD, 18));
 
-        JButton saveButton = new JButton("Save Drawing");
-        JButton clearButton = new JButton("Clear Drawing");
-        JButton loadButton = new JButton("Load Drawing");
+        // JButton saveButton = new JButton("Save Drawing");
+        // JButton clearButton = new JButton("Clear Drawing");
+        // JButton loadButton = new JButton("Load Drawing");
 
-        JButton colorButton = new JButton();
+        // JButton colorButton = new JButton();
+        // colorButton.setToolTipText("Pick Color"); // Tooltip text
+
+        RoundedButton saveButton = new RoundedButton("Save Drawing");
+        RoundedButton clearButton = new RoundedButton("Clear Drawing");
+        RoundedButton loadButton = new RoundedButton("Load Drawing");
+
+        RoundedButton colorButton = new RoundedButton("Pick Color");
         colorButton.setToolTipText("Pick Color"); // Tooltip text
 
         // Create a dynamic icon for the color button

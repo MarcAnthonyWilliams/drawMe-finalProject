@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.Scanner;
+//import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
@@ -99,13 +99,37 @@ public class DrawingPanel extends JPanel {
     }
 
     // Button actions
-    public void saveDrawing() {
+        public void saveDrawing() {
         synchronized (lock) {
             try {
-                String fileName = "manual_save" + saveCounter;;
-                ImageIO.write(canvas, "png", new File(fileName));
-                System.out.println("Drawing saved.");
-                saveCounter++;
+                // Open a save dialog
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Save Drawing");
+    
+                // Set default file name
+                fileChooser.setSelectedFile(new File("manual_save" + saveCounter + ".png"));
+    
+                int userSelection = fileChooser.showSaveDialog(this);
+                if (userSelection == JFileChooser.APPROVE_OPTION) {
+                    File fileToSave = fileChooser.getSelectedFile();
+    
+                    // Ensure the file has a .png extension
+                    if (!fileToSave.getName().toLowerCase().endsWith(".png")) {
+                        fileToSave = new File(fileToSave.getAbsolutePath() + ".png");
+                    }
+    
+                    // Save the canvas to the selected file
+                    ImageIO.write(canvas, "png", fileToSave);
+                    System.out.println("Drawing saved to: " + fileToSave.getAbsolutePath());
+                } else {
+                    // If no file is selected, save with default name in the current directory
+                    String defaultFileName = "manual_save" + saveCounter + ".png";
+                    File defaultFile = new File(defaultFileName);
+                    ImageIO.write(canvas, "png", defaultFile);
+                    System.out.println("Drawing saved to default file: " + defaultFile.getAbsolutePath());
+                }
+    
+                saveCounter++; // Increment the counter for default naming
             } catch (IOException e) {
                 e.printStackTrace();
             }

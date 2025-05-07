@@ -19,10 +19,10 @@ public class AutoSaveThread extends Thread {
 
                 synchronized (drawingPanel.getLock()) {
                     BufferedImage canvas = drawingPanel.getCanvas();
-                    String fileName = "autosave" + saveCounter++ + ".png";
+                    String fileName = "autosave" + saveCounter + ".png";
                     File file = new File(fileName);
                     ImageIO.write(canvas, "png", file);
-                    System.out.println("Autosaved drawing to " + fileName);
+                    System.out.println("Autosaved drawing to saved/" + fileName);
                     saveCounter++;
                 }
 
