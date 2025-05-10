@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.time.LocalTime;
 //import java.util.Scanner;
 import java.util.Stack;
 
@@ -17,6 +18,7 @@ public class DrawingPanel extends JPanel {
     private final int MIN_WIDTH = 800;
     private final int MIN_HEIGHT = 600;
     private int saveCounter = 1;
+    private volatile boolean isDrawing = false;
     //added for undo
     private final Stack<BufferedImage> undoStack = new Stack<>();
 
@@ -39,23 +41,25 @@ public class DrawingPanel extends JPanel {
         // Mouse listeners
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                drawDot(e.getX(), e.getY());
+                isDrawing = true;
+                synchronized (lock) {
+                    drawDot(e.getX(), e.getY());
+                }
+            }
+        
+            public void mouseReleased(MouseEvent e) {
+                isDrawing = false;
             }
         });
-
+        
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
-                drawDot(e.getX(), e.getY());
+                synchronized (lock) {
+                    drawDot(e.getX(), e.getY());
+                }
             }
         });
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                Dimension size = getSize();
-                resizeCanvas(size.width, size.height);
-            }
-        });        
+              
     }
 
     private BufferedImage copyCanvas(BufferedImage original) {
@@ -68,11 +72,14 @@ public class DrawingPanel extends JPanel {
 
 
     private void drawDot(int x, int y) {
-        undoStack.push(copyCanvas(canvas)); // push current state
+
         synchronized (lock){
+            undoStack.push(copyCanvas(canvas)); // push current state
             System.out.println("Drawing...");
             g2.fillOval(x, y, 4, 4); // Small circle to simulate drawing
             repaint();
+            //Uses same lock as autosave thread
+            //System.out.println("Drawing lock: " + System.identityHashCode(lock)); // in draw
         }
     }
     
@@ -107,7 +114,17 @@ public class DrawingPanel extends JPanel {
         }
     }
 
+    public void updateStatus(String message) {
+        if (statusLabel != null) {
+            SwingUtilities.invokeLater(() ->
+            statusLabel.setText(message + " at " + LocalTime.now().withNano(0))
+        );
+        }   
+    }
 
+    public boolean isCurrentlyDrawing() {
+        return isDrawing;
+    }
 
     // Public access for autosave thread
     public BufferedImage getCanvas() {
