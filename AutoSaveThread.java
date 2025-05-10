@@ -15,11 +15,11 @@ public class AutoSaveThread extends Thread {
         System.out.println("AutoSaveThread started."); 
         while (true) {
             try {
-                Thread.sleep(20000); // Save every 20 seconds
+                Thread.sleep(5000); // Save every 20 seconds
 
                 synchronized (drawingPanel.getLock()) {
                     BufferedImage canvas = drawingPanel.getCanvas();
-                    String fileName = "autosave" + saveCounter + ".png";
+                    String fileName = "saved/autosave" + saveCounter + ".png";
                     File file = new File(fileName);
                     ImageIO.write(canvas, "png", file);
                     System.out.println("Autosaved drawing to saved/" + fileName);

@@ -5,21 +5,33 @@ import components.RoundedButton;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-// import java.awt.event.ActionEvent;
-// import java.awt.event.ActionListener;
-// import java.awt.image.BufferedImage;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.KeyStroke;
+import java.awt.event.ActionEvent;
+import java.time.LocalTime;
 
 
 public class appFrame extends JFrame{
     private DrawingPanel drawingPanel;
     private JLabel label;
+    private JLabel statusLabel;
     //BufferedImage image; image wont be in app frame. This is just surrounding area.
 
     public appFrame(){
         setLayout(new BorderLayout());
         setTitle("DrawMe");
         label = new JLabel("Welcome to DrawMe!");
-        drawingPanel = new DrawingPanel();
+        statusLabel = new JLabel("Ready.");
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        add(statusLabel, BorderLayout.SOUTH);
+        statusLabel.setText("Drawing saved at " + LocalTime.now().withNano(0));
+
+        drawingPanel = new DrawingPanel(statusLabel);
+
+        
+
 
         JLabel title = new JLabel("Welcome to DrawMe!", SwingConstants.CENTER);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -35,6 +47,8 @@ public class appFrame extends JFrame{
         RoundedButton saveButton = new RoundedButton("Save Drawing");
         RoundedButton clearButton = new RoundedButton("Clear Drawing");
         RoundedButton loadButton = new RoundedButton("Load Drawing");
+        RoundedButton undoButton = new RoundedButton("Undo");
+
 
         RoundedButton colorButton = new RoundedButton("Pick Color");
         colorButton.setToolTipText("Pick Color"); // Tooltip text
@@ -69,7 +83,7 @@ public class appFrame extends JFrame{
         saveButton.setVerticalTextPosition(SwingConstants.CENTER);
         
 
-        ImageIcon saveIcon = new ImageIcon("icons/save.jpg");
+        ImageIcon saveIcon = new ImageIcon("icons/Save-Button-PNG-Transparent-File.png");
         Image scaledSaveImage = saveIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH); // Resize to 32x32
         saveButton.setIcon(new ImageIcon(scaledSaveImage));
         saveButton.setToolTipText("Save Drawing"); // Set tooltip text
@@ -81,6 +95,12 @@ public class appFrame extends JFrame{
         clearButton.setToolTipText("Clear Drawing"); // Set tooltip text
         clearButton.setText(null); // Remove button text
 
+        ImageIcon undoIcon = new ImageIcon("icons/undo-icon-size_32.png");
+        Image scaledUndoImage = undoIcon.getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH); // Resize to 32x32
+        undoButton.setIcon(new ImageIcon(scaledUndoImage));
+        undoButton.setToolTipText("Undo");
+        undoButton.setText(null); 
+
 
         //loadButton.setIcon(new ImageIcon("load.png"));
 
@@ -89,6 +109,7 @@ public class appFrame extends JFrame{
         buttonPanel.add(clearButton);
         buttonPanel.add(loadButton);
         buttonPanel.add(colorButton);
+        buttonPanel.add(undoButton);
 
         JPanel northPanel = new JPanel();
         northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.Y_AXIS)); // Stack vertically
@@ -110,6 +131,19 @@ public class appFrame extends JFrame{
         clearButton.addActionListener(e -> drawingPanel.clearCanvas());
         loadButton.addActionListener(e -> drawingPanel.loadDrawing());
         colorButton.addActionListener(e -> drawingPanel.pickColor());
+        undoButton.addActionListener(e -> drawingPanel.undo());
+
+        InputMap im = drawingPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = drawingPanel.getActionMap();
+
+        im.put(KeyStroke.getKeyStroke("control Z"), "undo");
+        am.put("undo", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                drawingPanel.undo();
+            }
+        });
+
 
        AutoSaveThread autoSave = new AutoSaveThread(drawingPanel);
        autoSave.start(); 

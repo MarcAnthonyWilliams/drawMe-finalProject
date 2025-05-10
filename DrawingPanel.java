@@ -4,21 +4,30 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 //import java.util.Scanner;
+import java.util.Stack;
 
 import javax.imageio.ImageIO;
 
 public class DrawingPanel extends JPanel {
     private BufferedImage canvas;
+    private JLabel statusLabel;
     private Graphics2D g2;
     private final Object lock = new Object();
     private Color currentColor = Color.BLACK;
     private final int MIN_WIDTH = 800;
     private final int MIN_HEIGHT = 600;
     private int saveCounter = 1;
+    //added for undo
+    private final Stack<BufferedImage> undoStack = new Stack<>();
+
+
+    public DrawingPanel(JLabel statusLabel) {
+        this();
+        this.statusLabel = statusLabel;
+    }
 
     public DrawingPanel() {
         setBackground(Color.WHITE);
-
         // Create the drawing canvas
         canvas = new BufferedImage(1600, 600, BufferedImage.TYPE_INT_ARGB);
         g2 = canvas.createGraphics();
@@ -49,8 +58,17 @@ public class DrawingPanel extends JPanel {
         });        
     }
 
+    private BufferedImage copyCanvas(BufferedImage original) {
+        BufferedImage copy = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
+        Graphics2D g = copy.createGraphics();
+        g.drawImage(original, 0, 0, null);
+        g.dispose();
+        return copy;
+    }
+
 
     private void drawDot(int x, int y) {
+        undoStack.push(copyCanvas(canvas)); // push current state
         synchronized (lock){
             System.out.println("Drawing...");
             g2.fillOval(x, y, 4, 4); // Small circle to simulate drawing
@@ -89,6 +107,8 @@ public class DrawingPanel extends JPanel {
         }
     }
 
+
+
     // Public access for autosave thread
     public BufferedImage getCanvas() {
         return canvas;
@@ -99,43 +119,65 @@ public class DrawingPanel extends JPanel {
     }
 
     // Button actions
-        public void saveDrawing() {
+    public void saveDrawing() {
         synchronized (lock) {
             try {
-                // Open a save dialog
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setDialogTitle("Save Drawing");
     
-                // Set default file name
                 fileChooser.setSelectedFile(new File("manual_save" + saveCounter + ".png"));
     
                 int userSelection = fileChooser.showSaveDialog(this);
                 if (userSelection == JFileChooser.APPROVE_OPTION) {
                     File fileToSave = fileChooser.getSelectedFile();
     
-                    // Ensure the file has a .png extension
+                    // Ensure the file has .png extension
                     if (!fileToSave.getName().toLowerCase().endsWith(".png")) {
                         fileToSave = new File(fileToSave.getAbsolutePath() + ".png");
                     }
     
-                    // Save the canvas to the selected file
                     ImageIO.write(canvas, "png", fileToSave);
                     System.out.println("Drawing saved to: " + fileToSave.getAbsolutePath());
+    
+                    if (statusLabel != null) {
+                        statusLabel.setText("Saved to: " + fileToSave.getName());
+                    }
+    
+                    saveCounter++;
                 } else {
-                    // If no file is selected, save with default name in the current directory
-                    String defaultFileName = "manual_save" + saveCounter + ".png";
-                    File defaultFile = new File(defaultFileName);
-                    ImageIO.write(canvas, "png", defaultFile);
-                    System.out.println("Drawing saved to default file: " + defaultFile.getAbsolutePath());
+                    System.out.println("Save canceled.");
+                    if (statusLabel != null) {
+                        statusLabel.setText("Save canceled.");
+                    }
                 }
     
-                saveCounter++; // Increment the counter for default naming
             } catch (IOException e) {
                 e.printStackTrace();
+                if (statusLabel != null) {
+                    statusLabel.setText("Failed to save drawing.");
+                }
             }
         }
     }
-
+    public void undo() {
+        synchronized (lock) {
+            if (!undoStack.isEmpty()) {
+                canvas = undoStack.pop();
+                g2 = canvas.createGraphics();
+                g2.setColor(currentColor);
+                g2.setStroke(new BasicStroke(2));
+                repaint();
+    
+                if (statusLabel != null) {
+                    statusLabel.setText("Undo applied.");
+                }
+            } else {
+                if (statusLabel != null) {
+                    statusLabel.setText("Nothing to undo.");
+                }
+            }
+        }
+    }
     // public void loadDrawing() {
     //     synchronized (lock) {
     //         try {
@@ -184,7 +226,6 @@ public class DrawingPanel extends JPanel {
             }
         }
     }    
-
     public void clearCanvas() {
         synchronized (lock) {
             g2.setColor(Color.WHITE);
